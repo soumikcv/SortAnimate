@@ -2,128 +2,185 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.util.Arrays;
 import java.util.Collections;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import javax.swing.*;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 public class SortAnimate extends JPanel {
 
-    private static final int NUM_OF_ITEMS = 200;
+    private static int NUM_OF_ITEMS = 200;
+    private static int TIMER_VALUE = 50;
     private static final int DIM_W = 1000;
     private static final int DIM_H = 650;
     private static final int HORIZON = 600;
     private static final int VERT_INC = 2;
-    private static final int HOR_INC = DIM_W / NUM_OF_ITEMS;
 
     private JButton startButton;
-    private Timer timer1 = null;
-    private Timer timer2 = null;
-    private Timer timer3 = null;
-    private Timer timer4 = null;
-    private Timer timer5 = null;
-    private Timer timer6 = null;
+    private JButton pauseButton;
+    private JSlider arraySize;
+    private JSlider time;
+    private JLabel delay;
+    private JLabel arrayLabel;
+    private Timer timer = null;
     private JButton resetButton;
+    private JComboBox options;
     public int radix=0;
     Integer[] list;
     Integer[] sorted;
     int currentIndex = NUM_OF_ITEMS - 1;
+    String[] sorts = {"Bubble Sort","Selection Sort","Insertion Sort","Quick Sort","Merge Sort","Radix Sort"};
 
     public SortAnimate() {
-        list = initList();
-        sorted = initSorted();
+        list = initList(NUM_OF_ITEMS);
+        sorted = initSorted(NUM_OF_ITEMS);
 
-        timer1 = new Timer(1, new ActionListener() {
+        timer = new Timer(TIMER_VALUE, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (isSortingDone()) {
                     ((Timer) e.getSource()).stop();
                     startButton.setEnabled(false);
                 } else {
-                    bubbleSort();
-                }
-                repaint();
-            }
-        });
+                    switch(options.getSelectedIndex()){
 
-        timer2 = new Timer(50, new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (isSortingDone()) {
-                    ((Timer) e.getSource()).stop();
-                    startButton.setEnabled(false);
-                } else {
-                    selectionSort();
-                }
-                repaint();
-            }
-        });
-        
-        timer3 = new Timer(50, new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (isSortingDone()) {
-                    ((Timer) e.getSource()).stop();
-                    startButton.setEnabled(false);
-                } else {
-                    insertionSort();
+                    case 0:
+                        bubbleSort();
+                        break;
+                    case 1:
+                        selectionSort();
+                        break;
+                    case 2:
+                        insertionSort();
+                        break;
+                    case 3:
+                        quicksort(0,currentIndex);
+                        break;
+                    case 4:
+                        mergeSort(0,currentIndex);
+                        break;
+                    case 5:
+                        radixSort();
+                        radix++;
+                        break;
+                    }
                 }
                 repaint();
             }
         });
 
-        timer4 = new Timer(50, new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (isSortingDone()) {
-                    ((Timer) e.getSource()).stop();
-                    startButton.setEnabled(false);
-                } else {
-                    quicksort(0,currentIndex);
-                }
-                repaint();
-            }
-        });
-        timer5 = new Timer(100, new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (isSortingDone()) {
-                    ((Timer) e.getSource()).stop();
-                    startButton.setEnabled(false);
-                } else {
-                    mergeSort(0,currentIndex);
-                }
-                repaint();
-            }
-        });
-        timer6 = new Timer(100, new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (isSortingDone()) {
-                    ((Timer) e.getSource()).stop();
-                    startButton.setEnabled(false);
-                } else {
-                    radixSort();
-                    radix++;
-                }
-                repaint();
-            }
-        });
+
+
+        arrayLabel = new JLabel("Array Size: 200");
+        arraySize = new JSlider(JSlider.HORIZONTAL, 50, 250, 200);
+        arraySize.addChangeListener(new ChangeListener() {
+              public void stateChanged(ChangeEvent event) {
+                int value = arraySize.getValue();
+                String data = "Array Size: "+ value;
+                arrayLabel.setText(data);
+              }
+            });
+
+
+
+
+
+
+        delay = new JLabel("Delay: 50ms");
+        time = new JSlider(JSlider.HORIZONTAL, 1, 200, 50);
+        time.addChangeListener(new ChangeListener() {
+              public void stateChanged(ChangeEvent event) {
+                timer.stop();
+                int value = time.getValue();
+                TIMER_VALUE = value;
+                timer = new Timer(TIMER_VALUE, new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        if (isSortingDone()) {
+                            ((Timer) e.getSource()).stop();
+                            startButton.setEnabled(false);
+                        } else {
+                            switch(options.getSelectedIndex()){
+
+                            case 0:
+                                bubbleSort();
+                                break;
+                            case 1:
+                                selectionSort();
+                                break;
+                            case 2:
+                                insertionSort();
+                                break;
+                            case 3:
+                                quicksort(0,currentIndex);
+                                break;
+                            case 4:
+                                mergeSort(0,currentIndex);
+                                break;
+                            case 5:
+                                radixSort();
+                                radix++;
+                                break;
+                        }
+                        }
+                        repaint();
+                    }
+                });
+                timer.start();
+                String data = "Delay: "+ value+"ms";
+                delay.setText(data);
+
+              }
+            });
+
+
+
+        options = new JComboBox(sorts);
+
+
         startButton = new JButton("Start");
         startButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                timer6.start();
+                timer.stop();
+                timer.start();
             }
         });
+
+
+
+        pauseButton = new JButton("Pause");
+        pauseButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                timer.stop();
+                }
+            });
+
+
+
         resetButton = new JButton("Reset");
         resetButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                list = initList();
+                timer.stop();
+
+                list = initList(arraySize.getValue());
+                sorted = initSorted(arraySize.getValue());
+                radix=0;
+                NUM_OF_ITEMS = arraySize.getValue();
                 currentIndex = NUM_OF_ITEMS - 1;
-                radix = 0;
                 repaint();
                 startButton.setEnabled(true);
             }
         });
+
+        add(arrayLabel);
+        add(arraySize);
+        add(delay);
+        add(time);
+        add(options);
         add(startButton);
+        add(pauseButton);
         add(resetButton);
     }
 
@@ -131,7 +188,7 @@ public class SortAnimate extends JPanel {
         return Arrays.equals(list,sorted);
     }
 
-    public Integer[] initList() {
+    public Integer[] initList(int NUM_OF_ITEMS) {
         Integer[] nums = new Integer[NUM_OF_ITEMS];
         for (int i = 1; i <= nums.length; i++) {
             nums[i - 1] = i;
@@ -140,7 +197,7 @@ public class SortAnimate extends JPanel {
         return nums;
     }
 
-    public Integer[] initSorted() 
+    public Integer[] initSorted(int NUM_OF_ITEMS) 
     {
         Integer[] nums = new Integer[NUM_OF_ITEMS];
         for (int i = 1; i <= nums.length; i++) {
@@ -149,12 +206,6 @@ public class SortAnimate extends JPanel {
         return nums;
     }
 
-    public void drawItem(Graphics g, int item, int index) {
-        int height = item * VERT_INC;
-        int y = HORIZON - height;
-        int x = index * HOR_INC;
-        g.fillRect(x, y, HOR_INC-1, height);
-    }
 
     public void bubbleSort() {  
         int n = list.length;  
@@ -284,8 +335,7 @@ public void radixSort()
     {
         int i, m = list[0], exp = 1, n = list.length;
         int[] b = new int[n];
-        int c = 0;
-        
+        int c = 0;        
         for (i = 1; i < n; i++)
             if (list[i] > m)
                 m = list[i];
@@ -303,18 +353,22 @@ public void radixSort()
             }
             for (i = 0; i < n; i++)
                 {list[i] = b[i];
-
                 }
             if(c==radix)
                 return;
             c++;
             exp *= 10;
-             
         }
     }   
 
 
-
+    public void drawItem(Graphics g, int item, int index) {
+        int HOR_INC = DIM_W / NUM_OF_ITEMS;
+        int height = item * VERT_INC;
+        int y = HORIZON - height;
+        int x = index * HOR_INC;
+        g.fillRect(x, y, HOR_INC-1, height);
+    }
 
 
     
